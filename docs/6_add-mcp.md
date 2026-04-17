@@ -23,13 +23,15 @@ Instead of integrating with individual APIs, you connect once to an MCP server a
 Update your imports in `agent.py` to include `MCPTool`:
 
 ```python
-import json
 import os
+import json
 import glob
+import time
+from typing import Any
 from dotenv import load_dotenv
 from azure.identity import DefaultAzureCredential
 from azure.ai.projects import AIProjectClient
-from azure.ai.projects.models import PromptAgentDefinition, FileSearchTool, FunctionTool, MCPTool, Tool
+from azure.ai.projects.models import PromptAgentDefinition, FileSearchTool, Tool, FunctionTool, MCPTool
 from openai.types.responses.response_input_param import FunctionCallOutput, ResponseInputParam
 ```
 
@@ -50,12 +52,23 @@ Add this code after your Function Calling Tool section and before creating the t
 
 ```python
 ## -- MCP -- ##
-mcpTool = MCPTool(
-    server_label="contoso-pizza-mcp",
-    server_url="<!--@include: ./variables/mcp-url.md-->",
-    require_approval="never"
+mcp_tool = MCPTool(
+    server_label="contoso_pizza",
+    server_url="https://ca-pizza-mcp-rh4p2gfg7ewoq.salmonwater-dc17e20b.eastus2.azurecontainerapps.io/sse",
+    allowed_tools=[
+        "get_pizzas",
+        "get_pizza_by_id",
+        "get_toppings",
+        "get_topping_by_id",
+        "get_topping_categories",
+        "get_orders",
+        "get_order_by_id",
+        "place_order",
+        "delete_order_by_id",
+    ],
+    require_approval="never",
 )
-## -- MCP -- ##
+## -- MCP -- ### -- MCP -- ##
 ```
 
 ### Parameters Explained
@@ -80,30 +93,23 @@ Add the MCP tool to your toolset:
 toolset: list[Tool] = []
 toolset.append(FileSearchTool(vector_store_ids=[vector_store.id]))
 toolset.append(func_tool)
-toolset.append(mcpTool)
+toolset.append(mcp_tool)
+
 ```
-
-
 ## Add a User ID
+## To place orders, the agent must identify the customer.
 
-To place orders, the agent must identify the customer.
+1. Get your User ID
+Visit this URL to register a customer:
+https://yellow-sand-0f6eceb0f.2.azurestaticapps.net
 
-1. **Get your User ID**  
-   Visit this URL to register a customer:  
-   [<!--@include: ./variables/customer-registration.md-->](<!--@include: ./variables/customer-registration.md-->)  
+2. Update your instructions.txt with your user details or pass the GUID in chat.
 
-2. **Update your `instructions.txt`** with your user details or pass the GUID in chat.
-
-```txt
 ## User details:
 Name: <YOUR NAME>
 UserId: <YOUR USER GUID>
-```
-
-3. (Optional) View your order dashboard:  
-   [<!--@include: ./variables/pizza-dashboard.md-->](<!--@include: ./variables/pizza-dashboard.md-->)
-
-
+(Optional) View your order dashboard:
+https://blue-dune-03b8c4b0f.4.azurestaticapps.net
 
 ## Trying It Out
 
